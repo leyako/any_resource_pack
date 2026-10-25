@@ -7,7 +7,7 @@ ROOT = Path(__file__).parent.parent
 DATA_FOLDER = ROOT / "data"
 DATA_FOLDER.mkdir(parents=True, exist_ok=True)
 
-MAX_PAGES = 5
+MAX_PAGES = 20
 
 API_URL = "https://api.texturepack.be/api/v1/search"
 HEADERS = {

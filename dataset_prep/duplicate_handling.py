@@ -1,6 +1,8 @@
 import hashlib
 from pathlib import Path
 
+from create_dataset import compress_dataset
+
 ROOT = Path(__file__).parent.parent
 DATA_FOLDER = ROOT / "data"
 DATASET_DIR = DATA_FOLDER / "dataset"
@@ -59,3 +61,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    compress_dataset()
