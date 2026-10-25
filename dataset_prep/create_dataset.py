@@ -16,7 +16,7 @@ DATASET_DIR = DATA_FOLDER / "dataset"
 HEADERS = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
 
 def build_dataset():
-    manifest_path = DATA_FOLDER / "80_packs_list.json"
+    manifest_path = DATA_FOLDER / "323_packs_list.json"
     with open(manifest_path, "r", encoding="utf-8") as f:
         packs = json.load(f)
 
@@ -29,6 +29,7 @@ def build_dataset():
         try:
             res = requests.get(url, headers=HEADERS, timeout=15)
             if res.status_code != 200:
+                print(f"Code not 200")
                 continue
 
             # Read .mcpack in-memory as a zip archive
