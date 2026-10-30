@@ -3,3 +3,5 @@ __pycache__/
 
 .env
 data/dataset/
+
+mc-items-32x/

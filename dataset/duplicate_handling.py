@@ -1,7 +1,7 @@
 import hashlib
 from pathlib import Path
 from config import get_subset_dir
-from create_dataset import compress_dataset
+
 
 def deduplicate_item_folder(item_folder: Path) -> tuple[int, int]:
     seen_hashes = set()
@@ -21,36 +21,29 @@ def deduplicate_item_folder(item_folder: Path) -> tuple[int, int]:
 
     return initial_count, duplicates_removed
 
+
 def remove_duplicates(pack_number: int = 80):
-    dataset_dir = get_subset_dir(pack_number)
+    subset_dir = get_subset_dir(pack_number)
 
-    if not dataset_dir.exists():
-        print(f"Dataset directory not found at: {dataset_dir}")
-        return
+    for split in ["train", "test"]:
+        split_dir = subset_dir / split
+        if not split_dir.exists():
+            continue
 
-    item_folders = [f for f in dataset_dir.iterdir() if f.is_dir()]
-    if not item_folders:
-        print("No item folders found in the dataset directory.")
-        return
+        item_folders = [f for f in split_dir.iterdir() if f.is_dir()]
+        print(f"\n--- Deduplicating {split.upper()} split ({pack_number}p) ---")
 
-    print(f"Running deduplication for {pack_number}p subset across {len(item_folders)} categories...\n")
+        total_initial = 0
+        total_removed = 0
 
-    total_initial = 0
-    total_removed = 0
+        for folder in sorted(item_folders):
+            initial, removed = deduplicate_item_folder(folder)
+            total_initial += initial
+            total_removed += removed
+            print(
+                f"[{folder.name}] Initial: {initial} | Removed: {removed} | Clean: {initial - removed}"
+            )
 
-    for folder in sorted(item_folders):
-        initial, removed = deduplicate_item_folder(folder)
-        remaining = initial - removed
-        total_initial += initial
-        total_removed += removed
-        print(f"[{folder.name}] Initial: {initial} | Removed: {removed} | Clean Total: {remaining}")
-
-    print("\n--- Deduplication Summary ---")
-    print(f"Total raw images processed: {total_initial}")
-    print(f"Duplicates removed: {total_removed}")
-    print(f"Total clean images remaining: {total_initial - total_removed}")
-
-if __name__ == "__main__":
-    PACK_NB = 80
-    remove_duplicates(PACK_NB)
-    compress_dataset(PACK_NB)
+        print(
+            f"Summary for {split}: {total_initial - total_removed} clean images remaining."
+        )
