@@ -49,6 +49,28 @@ class RGBAColorJitter:
         return torch.cat([rgb_jittered, alpha], dim=0)
 
 
+class LuminanceJitter:
+    """
+    Applies random brightness and contrast adjustments
+    strictly to the Luminance channel [0] of a 2-channel [2, 32, 32] tensor.
+    Leaves Alpha untouched.
+    """
+
+    def __init__(self, brightness: float = 0.15, contrast: float = 0.15):
+        # Apply jitter on a 1-channel tensor
+        self.jitter = v2.ColorJitter(brightness=brightness, contrast=contrast)
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        # tensor is [2, 32, 32] in range [0.0, 1.0]
+        lum = tensor[0:1, :, :]  # [1, 32, 32]
+        alpha = tensor[1:2, :, :]  # [1, 32, 32]
+
+        # Jitter brightness & contrast on luminance
+        lum_jittered = self.jitter(lum)
+
+        return torch.cat([lum_jittered, alpha], dim=0)
+
+
 def get_transforms(grayscale: bool = False, is_train: bool = True):
     transform_list = []
     # Convert to RGBA to get the alpha value
@@ -65,11 +87,15 @@ def get_transforms(grayscale: bool = False, is_train: bool = True):
     if grayscale:
         # Convert RGB to Grayscale and keep only 2 channel (grayscale + luminance)
         transform_list.append(RGBAToGrayscale())
-    elif is_train:
-        # Apply Color Jitter (only during training, only on full color)
-        transform_list.append(
-            RGBAColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05)
-        )
+
+        if is_train:
+            transform_list.append(LuminanceJitter(brightness=0.15, contrast=0.15))
+    else:
+        if is_train:
+            # Apply Color Jitter (only during training, only on full color)
+            transform_list.append(
+                RGBAColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05)
+            )
 
     # Normalize 2 channels to [-1.0, 1.0] (according to the ddpm paper) with 0.5 param
     transform_list.append(v2.Normalize(mean=[0.5, 0.5], std=[0.5, 0.5]))
