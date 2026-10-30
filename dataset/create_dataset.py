@@ -1,24 +1,30 @@
 import io
 import json
-import requests
 import tarfile
 import zipfile
-
 from pathlib import Path
 from PIL import Image
+import requests
 
-from config import ITEM_LIST
+from config import (
+    HEADERS,
+    ITEM_LIST,
+    get_archive_path,
+    get_manifest_path,
+    get_subset_dir,
+)
 
-ROOT = Path(__file__).parent.parent
-DATA_FOLDER = ROOT / "data"
-DATASET_DIR = DATA_FOLDER / "dataset"
+def build_dataset(pack_nb: int = 80):
+    manifest_path = get_manifest_path(pack_nb)
+    if not manifest_path.exists():
+        print(f"Manifest not found: {manifest_path}")
+        return
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
-
-def build_dataset():
-    manifest_path = DATA_FOLDER / "323_packs_list.json"
     with open(manifest_path, "r", encoding="utf-8") as f:
         packs = json.load(f)
+
+    dataset_dir = get_subset_dir(pack_nb)
+    dataset_dir.mkdir(parents=True, exist_ok=True)
 
     total_saved = 0
 
@@ -29,23 +35,19 @@ def build_dataset():
         try:
             res = requests.get(url, headers=HEADERS, timeout=15)
             if res.status_code != 200:
-                print(f"Code not 200")
                 continue
 
-            # Read .mcpack in-memory as a zip archive
             with zipfile.ZipFile(io.BytesIO(res.content)) as z:
                 for file_info in z.infolist():
                     filename = Path(file_info.filename).name
                     
                     if filename in ITEM_LIST:
-                        item_category = Path(filename).stem  # ca renvoie "diamond_sword"
-                        category_dir = DATASET_DIR / item_category
+                        item_category = Path(filename).stem
+                        category_dir = dataset_dir / item_category
                         category_dir.mkdir(parents=True, exist_ok=True)
 
                         with z.open(file_info) as img_file:
                             img = Image.open(img_file)
-                            
-                            # Strictly keep 32x32 images
                             if img.size == (32, 32):
                                 out_path = category_dir / f"{slug}_{filename}"
                                 img.save(out_path)
@@ -58,15 +60,20 @@ def build_dataset():
 
     print(f"\nExtraction finished. Total items saved: {total_saved}")
 
-def compress_dataset():
-    tar_path = DATA_FOLDER / "dataset_32x32.tar.gz"
-    print(f"Compressing dataset to {tar_path}...")
+def compress_dataset(pack_nb: int = 80):
+    tar_path = get_archive_path(pack_nb)
+    subset_dir = get_subset_dir(pack_nb)
     
+    if not subset_dir.exists():
+        print(f"Cannot compress, subset directory does not exist: {subset_dir}")
+        return
+
+    print(f"Compressing dataset subset {pack_nb}p to {tar_path}...")
     with tarfile.open(tar_path, "w:gz") as tar:
-        tar.add(DATASET_DIR, arcname="dataset")
+        tar.add(subset_dir, arcname=f"dataset_{pack_nb}p")
         
     print("Compression complete!")
 
 if __name__ == "__main__":
-    build_dataset()
-    compress_dataset()
+    build_dataset(80)
+    compress_dataset(80)

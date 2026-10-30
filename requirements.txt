@@ -2,3 +2,5 @@ bs4
 requests
 pillow
 dvc
+huggingface_hub
+datasets

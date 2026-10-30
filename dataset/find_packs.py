@@ -1,21 +1,12 @@
 import json
 import concurrent.futures
-from pathlib import Path
 import requests
 
-ROOT = Path(__file__).parent.parent
-DATA_FOLDER = ROOT / "data"
-DATA_FOLDER.mkdir(parents=True, exist_ok=True)
+from config import API_URL, HEADERS, get_manifest_path
 
 MAX_PAGES = 20
 
-API_URL = "https://api.texturepack.be/api/v1/search"
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
-}
-
 def check_candidate_url(candidate: dict) -> dict | None:
-    """Tests if candidate static CDN URLs return an HTTP 200 OK status."""
     for url in candidate["urls"]:
         try:
             res = requests.head(url, headers=HEADERS, allow_redirects=True, timeout=4)
@@ -32,18 +23,14 @@ def check_candidate_url(candidate: dict) -> dict | None:
             continue
     return None
 
-def fetch_pack_manifest(max_pages=20):
-    """
-    Queries the texturepack.be search API, verifies candidate download links concurrently,
-    and returns a list of all verified working packs across all pages.
-    """
+def fetch_pack_manifest(resolution: str = "32x32", max_pages: int = 20):
     candidates = []
     
     for page in range(1, max_pages + 1):
         params = {
             "page": page,
             "limit": 20,
-            "resolution": "32x32",
+            "resolution": resolution,
             "sortBy": "download_count",
             "sortOrder": "desc"
         }
@@ -55,54 +42,46 @@ def fetch_pack_manifest(max_pages=20):
             
         payload = response.json()
         results = payload.get("data", {}).get("results", [])
-        
         if not results:
             break
             
         for pack in results:
             slug = pack.get("slug")
-            name = pack.get("name") or pack.get("packName")
-            downloads = pack.get("download_count")
-            tags = pack.get("tags", [])
-            
             candidates.append({
                 "id": pack.get("id"),
-                "name": name,
+                "name": pack.get("name") or pack.get("packName"),
                 "slug": slug,
-                "downloads": downloads,
-                "tags": tags,
-                "urls": [
-                    f"https://sdn.texturepack.be/packs/{slug}/{slug}.mcpack",
-                ]
+                "downloads": pack.get("download_count"),
+                "tags": pack.get("tags", []),
+                "urls": [f"https://sdn.texturepack.be/packs/{slug}/{slug}.mcpack"]
             })
             
-        pagination = payload.get("data", {}).get("pagination", {})
-        if not pagination.get("hasNext", False):
+        if not payload.get("data", {}).get("pagination", {}).get("hasNext", False):
             break
 
-    print(f"Retrieved {len(candidates)} candidates from API. Testing working direct URLs...")
     working_manifest = []
-
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_candidate = {
-            executor.submit(check_candidate_url, c): c for c in candidates
-        }
-        
+        future_to_candidate = {executor.submit(check_candidate_url, c): c for c in candidates}
         for future in concurrent.futures.as_completed(future_to_candidate):
             result = future.result()
             if result:
                 working_manifest.append(result)
-                print(f"[{len(working_manifest)}] Confirmed: {result['name']}")
 
     return working_manifest
 
-if __name__ == "__main__":
-    packs = fetch_pack_manifest(max_pages=MAX_PAGES)
+def find_and_save_packs(max_pages: int = MAX_PAGES) -> int:
+    packs = fetch_pack_manifest(max_pages=max_pages)
+    pack_nb = len(packs)
+
+    # Taking the lowest multiple of 10
+    pack_nb = pack_nb // 10  * 10
     
-    print(f"\nSuccessfully verified {len(packs)} working packs in total.")
-    
-    output_path = DATA_FOLDER / f"{len(packs)}_packs_list.json"
+    output_path = get_manifest_path(pack_nb)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(packs, f, indent=2, ensure_ascii=False)
         
-    print(f"Saved manifest to {output_path}")
+    print(f"Verified {pack_nb} packs. Saved manifest to {output_path}")
+    return pack_nb
+
+if __name__ == "__main__":
+    find_and_save_packs(MAX_PAGES)
