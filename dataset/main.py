@@ -4,7 +4,8 @@ from config import MAX_PAGES
 from create_dataset import build_dataset
 from duplicate_handling import remove_duplicates
 from find_packs import find_and_save_packs
-from save_dataset import save_dataset_to_hf_hub
+from save_dataset import save_dataset_via_git
+
 
 def run_pipeline(max_pages: int = MAX_PAGES):
     """
@@ -16,7 +17,7 @@ def run_pipeline(max_pages: int = MAX_PAGES):
     """
     print("=== Step 1/4: Discovering & Verifying Resource Packs ===")
     pack_nb = find_and_save_packs(max_pages=max_pages)
-    
+
     if pack_nb == 0:
         print("Error: No working packs found. Aborting pipeline execution.")
         sys.exit(1)
@@ -27,10 +28,11 @@ def run_pipeline(max_pages: int = MAX_PAGES):
     print(f"\n=== Step 3/4: Handling Visual Duplicates ({pack_nb}p subset) ===")
     remove_duplicates(pack_number=pack_nb)
 
-    print(f"\n=== Step 4/4: Uploading Dataset to Hugging Face Hub ({pack_nb}p subset) ===")
-    save_dataset_to_hf_hub(pack_nb=pack_nb)
+    print(f"\n=== Step 4/4: Uploading Dataset to HF (via Git) ({pack_nb}p subset) ===")
+    save_dataset_via_git(pack_nb=pack_nb)
 
     print("\n=== Pipeline Execution Completed Successfully ===")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -40,7 +42,7 @@ if __name__ == "__main__":
         "--max-pages",
         type=int,
         default=MAX_PAGES,
-        help=f"Maximum search API pages to scrape (default: {MAX_PAGES})."
+        help=f"Maximum search API pages to scrape (default: {MAX_PAGES}).",
     )
 
     args = parser.parse_args()

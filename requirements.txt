@@ -1,6 +1,10 @@
-bs4
-requests
-pillow
-dvc
-huggingface_hub
-datasets
+bs4==0.0.2
+datasets==5.1.0
+dvc==3.67.1
+huggingface-hub==2.4.0
+matplotlib==3.11.2
+pillow==13.0.0
+requests==2.34.2
+scikit-learn==1.9.1
+torch==2.15.0
+torchvision==0.29.2
