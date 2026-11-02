@@ -1,4 +1,4 @@
-from variance_scheduling import linear_scheduler, cosine_scheduler
+from .variance_scheduling import linear_scheduler, cosine_scheduler
 
 from typing import Literal
 from config import BETA_START, BETA_END
@@ -20,8 +20,10 @@ class NoisingModel:
             )
 
     def sample_at_step(self, t):
+        t = t - 1
         mean = torch.sqrt(self.sigmas_bar[t]) * self.x_0
-        std = 1 - self.sigmas_bar[t] * torch.eye(self.x_0.size[0])
-        res = torch.normal(mean, std)
+        std = (1 - self.sigmas_bar[t]) * torch.eye(self.x_0.size(1))
 
-        return res
+        return torch.distributions.MultivariateNormal(
+            loc=mean, covariance_matrix=std
+        ).sample()

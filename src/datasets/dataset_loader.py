@@ -1,6 +1,6 @@
 import torch
 
-from config import TRAIN_PATH, TEST_PATH, BATCH_SIZE
+from .config import TRAIN_PATH, TEST_PATH, BATCH_SIZE
 from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import datasets
@@ -98,7 +98,12 @@ def get_transforms(grayscale: bool = False, is_train: bool = True):
             )
 
     # Normalize 2 channels to [-1.0, 1.0] (according to the ddpm paper) with 0.5 param
-    transform_list.append(v2.Normalize(mean=[0.5, 0.5], std=[0.5, 0.5]))
+    if grayscale:
+        transform_list.append(v2.Normalize(mean=[0.5, 0.5], std=[0.5, 0.5]))
+    else:
+        transform_list.append(
+            v2.Normalize(mean=[0.5, 0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5, 0.5])
+        )
 
     return v2.Compose(transform_list)
 
