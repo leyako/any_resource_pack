@@ -23,7 +23,7 @@ def linear_scheduler(T=1000, start=1e-4, end=0.02):
     Thanks to an already existing repo (https://github.com/ThiagoLira/ToyDiffusion/blob/main/DiffusionGenealogy/ddpm/utils.py),
     we were able to understand and include square root linear interpolation for the linear space that our betas will follow.
 
-    Having the sqrt of \a start and \a end will increase their values (since they are < 1), we will then be able to create
+    Having the sqrt of _start_ and _end_ will increase their values (since they are < 1), we will then be able to create
     our linear space with a smaller increase at each step. This allows earlier values of the schedule to grow slowly and
     allows our images to keep more information in earlier steps.
     """
