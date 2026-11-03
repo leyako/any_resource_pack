@@ -21,9 +21,10 @@ class NoisingModel:
 
     def sample_at_step(self, t):
         t = t - 1
-        mean = torch.sqrt(self.sigmas_bar[t]) * self.x_0
-        std = (1 - self.sigmas_bar[t]) * torch.eye(self.x_0.size(1))
+        epsilon = torch.randn_like(self.x_0)
 
-        return torch.distributions.MultivariateNormal(
-            loc=mean, covariance_matrix=std
-        ).sample()
+        mean = torch.sqrt(self.sigmas_bar[t]) * self.x_0
+        std = (1 - self.sigmas_bar[t]) * epsilon
+
+        x_t = mean + std
+        return x_t, epsilon

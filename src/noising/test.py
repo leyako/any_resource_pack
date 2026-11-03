@@ -10,7 +10,7 @@ x = images[0]
 
 noising_model = NoisingModel(T=1000, x_0=x, scheduler="linear")
 
-new_x = noising_model.sample_at_step(250)
+new_x, _ = noising_model.sample_at_step(990)
 
 new_x = denormalize(new_x, grayscale=False)
 
