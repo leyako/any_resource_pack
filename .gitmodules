@@ -1,0 +1,3 @@
+[submodule "dataset/data/mc-items-32x"]
+	path = dataset/data/mc-items-32x
+	url = git@hf.co:datasets/leyako/mc-items-32x
