@@ -7,6 +7,18 @@ from pos_embedding import sinusoidal_positional_embeddings
 
 
 class AttentionGate(nn.Module):
+    """
+    This self attention between a gated signal (the upsampled x) and the skip connection
+    allows us to keep only the interesting parts of the skip connection based on the incoming
+    upsampled signal.
+
+    First, we have to project both signals to the same number of channels (features) F_int,
+    we do a 1x1 convolution to add new features to both g and x. We then combine the intermediate
+    x and g and activate it with ReLU, we then do another projection from F_int features to only
+    one, this allows for each pixel to have a single value between 0 and 1 and then with sigmoid
+    we can know which pixels are the most important to keep and we weight it with that.
+    """
+
     def __init__(self, F_g: int, F_l: int, F_int: int):
         super().__init__()
 
@@ -40,6 +52,19 @@ class AttentionGate(nn.Module):
 
 
 class DoubleConv(nn.Module):
+    """
+    Factorization of the 2 convolutions performed at each feature map
+
+    Since it's for DDPM, we use the time embedding to give our model
+    time-position-awareness for the given input image.
+
+    The operation has a time_proj Linear layer to project the time embedding
+    of dimension 512 to c_out dimensions that the first convolution gave as output.
+
+    See https://apxml.com/courses/intro-diffusion-models/chapter-4-model-architecture-training/integrating-timestep-information
+    for more information about time embedding integrations.
+    """
+
     def __init__(self, c_in, c_out, time_emb_dim=512):
         super().__init__()
         self.conv1 = nn.Sequential(
@@ -72,6 +97,12 @@ class DoubleConv(nn.Module):
 
 
 class Down(nn.Module):
+    """
+    Down class allows us to factorize the downsampling operation of our network.
+
+    It uses time embeddings, directly in the DoubleConv layer.
+    """
+
     def __init__(self, c_in, c_out, time_emb_dim):
         super().__init__()
         self.pool = nn.MaxPool2d(2)
@@ -83,6 +114,14 @@ class Down(nn.Module):
 
 
 class Up(nn.Module):
+    """
+    Up class allows us to factorize the upsampling operation inside our network.
+
+    It uses Attention gates to keep only interesting parts of the skip connection.
+
+    It uses time embeddings during the convolutional blocks to teach the model time representations.
+    """
+
     def __init__(self, c_in: int, c_out: int, time_emb_dim: int, use_skip=True):
         super().__init__()
         self.use_skip = use_skip
@@ -108,6 +147,12 @@ class Up(nn.Module):
 
 
 class TimeMLP(nn.Sequential):
+    """
+    This is the MLP that allows us to learn effective representations of time embeddings
+    specially for our model's needs. This transforms a static fixed time embeddings to
+    a learned one.
+    """
+
     def __init__(self, base, time_emb_dim):
         super().__init__(
             nn.Linear(base, time_emb_dim),
@@ -117,6 +162,22 @@ class TimeMLP(nn.Sequential):
 
 
 class DenoisingUNet(nn.Module):
+    """
+    This is the main architecture for the Denoising model.
+
+    base is the number of channels the designated layer will have during the convolutions.
+    It grows from 64 to 1024, while reducing the dimension of our image from 32x32 to 4x4.
+
+    We use the time embeddings that are here to help the model understand specific timesteps
+    for the diffusion process. We use the sinusoidal_positional_embeddings from
+    'Attention is All You Need' paper.
+
+    To adapt the time embeddings to our model's needs, we use a TimeMLP which is a Linear, SiLU, Linear
+    that transforms the static time embeddings into learned feature representations.
+
+    To keep only the important parts of the skip connection, we perform use Attention Gates (AG).
+    """
+
     def __init__(
         self,
         in_channels,
