@@ -63,25 +63,27 @@ class DoubleConv(nn.Module):
 
     See https://apxml.com/courses/intro-diffusion-models/chapter-4-model-architecture-training/integrating-timestep-information
     for more information about time embedding integrations.
+
+    We use GroupNorm with 32 groups meaning we will have minimum 2 channels per group
+    and maximum 32 channels per group.
     """
 
-    def __init__(self, c_in, c_out, time_emb_dim=512):
+    def __init__(self, c_in, c_out, time_emb_dim=512, dropout_rate: float = 0.1):
         super().__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(c_in, c_out, 3, padding=1),  # DONE
-            nn.BatchNorm2d(
-                c_out
-            ),  # à remplacer par la group norm mais je sais pas l'idéal
+            nn.GroupNorm(num_groups=32, num_channels=c_out),
             nn.ReLU(),
         )
 
         self.time_proj = nn.Linear(time_emb_dim, c_out)
 
+        # Dropout rate of 0.1 used at every DoubleConv layer to learn more diversity
+        self.dropout = nn.Dropout(p=dropout_rate)
+
         self.conv2 = nn.Sequential(
             nn.Conv2d(c_out, c_out, 3, padding=1),
-            nn.BatchNorm2d(
-                c_out
-            ),  # à remplacer par la group norm mais je sais pas l'idéal
+            nn.GroupNorm(num_groups=32, num_channels=c_out),
             nn.ReLU(),
         )
 
@@ -91,8 +93,9 @@ class DoubleConv(nn.Module):
         t_emb_proj = self.time_proj(t_emb).reshape(
             x.shape[0], x.shape[1], 1, 1
         )  # Reshape t_emb to match dim number of x
-
         x = x + t_emb_proj
+
+        x = self.dropout(x)
         return self.conv2(x)
 
 
