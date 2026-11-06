@@ -27,6 +27,7 @@ class NoisingModel:
 
     def sample_at_step(self, batch, t):
         t = t - 1
+        batch = batch.to(self.device)
         sigma_bar = self.sigmas_bar[t].view(-1, 1, 1, 1).to(self.device)
 
         epsilon = torch.randn_like(batch)
