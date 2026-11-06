@@ -11,6 +11,7 @@ class NoisingModel:
         self, T, scheduler: Literal["linear", "cosine"], device: str = "cuda"
     ) -> None:
         self.device = device
+        self.T = T
 
         if scheduler == "linear":
             self.betas, self.sigmas, self.sigmas_bar = linear_scheduler(
