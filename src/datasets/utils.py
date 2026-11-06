@@ -1,4 +1,8 @@
 import torch
+import matplotlib.pyplot as plt
+import math
+
+from .config import ROOT
 
 
 def denormalize(tensor: torch.Tensor, grayscale: bool = False) -> torch.Tensor:
@@ -9,12 +13,52 @@ def denormalize(tensor: torch.Tensor, grayscale: bool = False) -> torch.Tensor:
 
     if grayscale:
         # Extract Luminance and Alpha
-        luminance = denom[0:1, :, :]  # [1, 32, 32]
-        alpha = denom[1:2, :, :]  # [1, 32, 32]
+        luminance = denom[..., 0:1, :, :]  # [B, 1, 32, 32]
+        alpha = denom[..., 1:2, :, :]  # [B, 1, 32, 32]
 
-        rgb = luminance.repeat(3, 1, 1)  # [3, 32, 32]
-
-        # Recombine into [4, 32, 32] RGBA
-        return torch.cat([rgb, alpha], dim=0)
+        return torch.cat([luminance, luminance, luminance, alpha], dim=-3)
 
     return denom
+
+
+def show_image(tensor, grayscale: bool = False):
+    tensor = tensor.detach().cpu()
+
+    # single images become a batch of 1
+    if tensor.dim() == 3:
+        tensor = tensor.unsqueeze(0)
+
+    if tensor.dim() != 4:
+        raise ValueError(f"Expected 3D or 4D tensor, got {tensor.dim()}D tensor.")
+
+    # denormalize the batch
+    tensor = denormalize(tensor, grayscale=grayscale)
+
+    # dynamic grid plotting
+    b_size = tensor.size(0)
+    cols = min(b_size, 8)
+    rows = math.ceil(b_size / cols)
+
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.5, rows * 1.5))
+
+    # Force axes into a flat list even if it's just 1 item, so we can always iterate over it
+    if b_size == 1:
+        axes = [axes]
+    else:
+        axes = axes.flatten()
+
+    for i in range(b_size):
+        # convert [C, H, W] -> [H, W, C]
+        np_img = tensor[i].permute(1, 2, 0).numpy()
+        axes[i].imshow(np_img)
+        axes[i].axis("off")
+
+    # Hide any empty subplots at the end of the grid
+    for j in range(b_size, len(axes)):
+        axes[j].axis("off")
+
+    plt.tight_layout()
+    plt.savefig(
+        ROOT / f"figures/generated_grid_{b_size}_images.png", bbox_inches="tight"
+    )
+    plt.show()
