@@ -1,13 +1,3 @@
-"""
-Generation entry point: samples textures from a trained checkpoint.
-
-    python3 -m src.sampling.sample --n 32 --out figures/samples.png
-
-Runs the whole reverse chain from pure noise, so it costs T network passes
-whatever the batch size. The schedule and T must match those used for training:
-a mismatch silently samples from the wrong distribution.
-"""
-
 import argparse
 
 import torch
@@ -38,9 +28,7 @@ def parse_args(argv=None):
     )
     parser.add_argument("--n", type=int, default=32, help="How many images to sample.")
     parser.add_argument("--timesteps", type=int, default=TIMESTEPS, help="T")
-    parser.add_argument(
-        "--scheduler", choices=["linear", "cosine"], default=SCHEDULER
-    )
+    parser.add_argument("--scheduler", choices=["linear", "cosine"], default=SCHEDULER)
     parser.add_argument("--img-size", type=int, default=IMG_SIZE)
     parser.add_argument(
         "--rgba",
@@ -75,9 +63,7 @@ def sample(argv=None):
 
     print(f"Device: {device} | checkpoint: {args.checkpoint}")
 
-    model = DenoisingUNet(
-        in_channels=channels, out_channels=channels, T=args.timesteps
-    )
+    model = DenoisingUNet(in_channels=channels, out_channels=channels, T=args.timesteps)
     model.load_state_dict(torch.load(args.checkpoint, map_location=device))
     model.to(device).eval()
 
@@ -99,9 +85,7 @@ def sample(argv=None):
     print(f"Generated tensor shape: {generated_images.shape}")
 
     out_path = args.out or FIGURES_PATH / f"samples_{args.n}.png"
-    show_image(
-        generated_images, grayscale=grayscale, out_path=out_path, show=args.show
-    )
+    show_image(generated_images, grayscale=grayscale, out_path=out_path, show=args.show)
 
 
 if __name__ == "__main__":
