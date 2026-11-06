@@ -1,6 +1,4 @@
-"""Re-export of the training hyperparameters. Edit `hyperparams/config.py` instead."""
-
-from hyperparams.config import (  # noqa: F401
+from hyperparams.config import (
     EPOCHS,
     LATEST_CHECKPOINT,
     LEARNING_RATE,

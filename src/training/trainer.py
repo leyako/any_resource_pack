@@ -39,24 +39,20 @@ class DenoisingTrainer:
         ).to(self.device)
 
         if optim == "adam":
-            self.optimizer = torch.optim.Adam(
-                self.denoising_model.parameters(), lr=lr
-            )
+            self.optimizer = torch.optim.Adam(self.denoising_model.parameters(), lr=lr)
         else:
-            self.optimizer = torch.optim.AdamW(
-                self.denoising_model.parameters(), lr=lr
-            )
+            self.optimizer = torch.optim.AdamW(self.denoising_model.parameters(), lr=lr)
 
-        self.noising_model = NoisingModel(
-            T=T, scheduler=scheduler, device=self.device
-        )
+        self.noising_model = NoisingModel(T=T, scheduler=scheduler, device=self.device)
+
+        self.model_slug = f"{scheduler}-{optim}-{LEARNING_RATE}-{T}-{batch.size(0)}"
 
     def train_step(self, batch):
         batch = batch.to(self.device)
         b_size = batch.size(0)
 
         # Sample random timesteps
-        timesteps = torch.randint(1, self.T + 1, (b_size,))
+        timesteps = torch.randint(1, self.T + 1, (b_size,), device=self.device)
         x_ts, epsilons = self.noising_model.sample_at_step(batch=batch, t=timesteps)
 
         self.optimizer.zero_grad()
@@ -98,6 +94,7 @@ class DenoisingTrainer:
     def train(self, epochs):
         self.denoising_model.train()
         avg_train_loss = 0.0
+        val_loss = 0.0
         for epoch in range(1, epochs + 1):
             epoch_loss = 0.0
 
@@ -122,13 +119,10 @@ class DenoisingTrainer:
             else:
                 print(f"End of Epoch {epoch} | Train Loss: {avg_train_loss:.4f}")
 
-        print(f"Saving model with last avg_train_loss: {avg_train_loss:.4f}")
+        # print(f"Saving model with last avg_train_loss: {avg_train_loss:.4f}")
+        # torch.save(
+        #     self.denoising_model.state_dict(),
+        #     MODEL_PATH / f"{self.model_slug}-{epochs}-{avg_train_loss:.4f}.pt",
+        # )
 
-        run_path = MODEL_PATH / f"denoising-{avg_train_loss:.2f}-{epochs}.pt"
-        torch.save(self.denoising_model.state_dict(), run_path)
-
-        # Stable name so sampling has a default checkpoint to pick up
-        torch.save(self.denoising_model.state_dict(), LATEST_CHECKPOINT)
-
-        print(f"Saved {run_path} and {LATEST_CHECKPOINT}")
-        return run_path
+        return val_loss

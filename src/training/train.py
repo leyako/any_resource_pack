@@ -1,13 +1,3 @@
-"""
-Training entry point.
-
-    python3 -m src.training.train --epochs 20 --scheduler linear
-
-Flags default to hyperparams/config.py, so no argument reproduces the reference
-run. The objective is the simplified DDPM loss: MSE between the predicted and
-the true noise, at a uniformly sampled timestep.
-"""
-
 import argparse
 
 from hyperparams.config import (
@@ -63,10 +53,9 @@ def init_trainer(args):
     return DenoisingTrainer(
         train_loader,
         val_loader,
-        args.optim,
+        optim=args.optim,
         T=args.timesteps,
         device=device,
-        scheduler=args.scheduler,
         lr=args.lr,
     )
 
