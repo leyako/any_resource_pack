@@ -1,14 +1,16 @@
+from .config import BETA_START, BETA_END
 from .variance_scheduling import linear_scheduler, cosine_scheduler
 
 from typing import Literal
-from config import BETA_START, BETA_END
 
 import torch
 
 
 class NoisingModel:
-    def __init__(self, T, x_0, scheduler: Literal["linear", "cosine"]) -> None:
-        self.x_0 = x_0
+    def __init__(
+        self, T, scheduler: Literal["linear", "cosine"], device: str = "cuda"
+    ) -> None:
+        self.device = device
 
         if scheduler == "linear":
             self.betas, self.sigmas, self.sigmas_bar = linear_scheduler(
@@ -19,12 +21,18 @@ class NoisingModel:
                 T=T, start=BETA_START, end=BETA_END
             )
 
-    def sample_at_step(self, t):
-        t = t - 1
-        epsilon = torch.randn_like(self.x_0)
+        self.betas = self.betas.to(self.device)
+        self.sigmas = self.sigmas.to(self.device)
+        self.sigmas_bar = self.sigmas_bar.to(self.device)
 
-        mean = torch.sqrt(self.sigmas_bar[t]) * self.x_0
-        std = (1 - self.sigmas_bar[t]) * epsilon
+    def sample_at_step(self, batch, t):
+        t = t - 1
+        sigma_bar = self.sigmas_bar[t].view(-1, 1, 1, 1).to(self.device)
+
+        epsilon = torch.randn_like(batch)
+
+        mean = torch.sqrt(sigma_bar) * batch
+        std = torch.sqrt(1 - sigma_bar) * epsilon
 
         x_t = mean + std
         return x_t, epsilon
