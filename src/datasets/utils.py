@@ -21,8 +21,9 @@ def denormalize(tensor: torch.Tensor, grayscale: bool = False) -> torch.Tensor:
     return denom
 
 
-def show_image(tensor, grayscale: bool = False, out_path=None, show: bool = True):
-    """Plots a batch as a grid. Saves it to `out_path` when given, else to figures/."""
+def show_image(
+    tensor, slug: str = "", grayscale: bool = False, out_path=None, show: bool = True
+):
     tensor = tensor.detach().cpu()
 
     # single images become a batch of 1
@@ -61,7 +62,7 @@ def show_image(tensor, grayscale: bool = False, out_path=None, show: bool = True
     plt.tight_layout()
 
     if out_path is None:
-        out_path = ROOT / "figures" / f"generated_grid_{b_size}_images.png"
+        out_path = ROOT / "figures" / f"{slug}_{b_size}_images.png"
 
     plt.savefig(out_path, bbox_inches="tight", dpi=150)
     print(f"Saved figure to {out_path}")
