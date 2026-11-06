@@ -2,7 +2,7 @@ import torch
 
 from .config import TRAIN_PATH, TEST_PATH, BATCH_SIZE
 from PIL import Image
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision import datasets
 from torchvision.transforms import v2, Grayscale
 
@@ -115,18 +115,36 @@ def rgba_loader(path: str) -> Image.Image:
         return img.convert("RGBA")
 
 
-def load_dataset(grayscale: bool = False):
+def load_dataset(grayscale: bool = False, val_split: float = 0.2):
     train_tf = get_transforms(grayscale=grayscale, is_train=True)
     test_tf = get_transforms(grayscale=grayscale, is_train=False)
 
-    train_ds = datasets.ImageFolder(TRAIN_PATH, transform=train_tf, loader=rgba_loader)
+    base_train_ds = datasets.ImageFolder(
+        TRAIN_PATH, transform=train_tf, loader=rgba_loader
+    )
+    base_val_ds = datasets.ImageFolder(
+        TRAIN_PATH, transform=test_tf, loader=rgba_loader
+    )
+
+    # This is used for the val_ds' creation
+    dataset_size = len(base_train_ds)
+    indices = torch.randperm(dataset_size).tolist()
+
+    val_size = int(val_split * dataset_size)
+
+    val_ds = Subset(base_val_ds, indices[:val_size])
+    train_ds = Subset(base_train_ds, indices[val_size:])
+
     test_ds = datasets.ImageFolder(TEST_PATH, transform=test_tf, loader=rgba_loader)
 
     train_loader = DataLoader(
         train_ds, batch_size=BATCH_SIZE, shuffle=True, pin_memory=is_cuda
     )
+    val_loader = DataLoader(
+        val_ds, batch_size=BATCH_SIZE, shuffle=False, pin_memory=is_cuda
+    )
     test_loader = DataLoader(
         test_ds, batch_size=BATCH_SIZE, shuffle=False, pin_memory=is_cuda
     )
 
-    return train_loader, test_loader
+    return train_loader, val_loader, test_loader
