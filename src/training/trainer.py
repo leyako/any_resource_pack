@@ -4,7 +4,7 @@ from tqdm import tqdm
 from src.denoising.unet import DenoisingUNet
 from src.noising.noising_model import NoisingModel
 
-from src.training.config import LEARNING_RATE, FOLDER_PATH
+from src.training.config import LEARNING_RATE, MODEL_PATH
 
 import torch
 import torch.nn.functional as F
@@ -114,5 +114,5 @@ class DenoisingTrainer:
         print(f"Saving model with last avg_train_loss: {avg_train_loss:.4f}")
         torch.save(
             self.denoising_model.state_dict(),
-            MODEL_PATH / f"denoising_{avg_train_loss:.4f}.pt",
+            MODEL_PATH / f"denoising-{avg_train_loss:.2f}-{epochs}.pt",
         )
