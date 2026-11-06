@@ -114,5 +114,5 @@ class DenoisingTrainer:
         print(f"Saving model with last avg_train_loss: {avg_train_loss:.4f}")
         torch.save(
             self.denoising_model.state_dict(),
-            FOLDER_PATH / f"models/denoising_{avg_train_loss:.4f}.pt",
+            MODEL_PATH / f"denoising_{avg_train_loss:.4f}.pt",
         )

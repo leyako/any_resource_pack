@@ -1,11 +1,12 @@
 import torch
 
-from config import EPOCHS, TIMESTEPS
+from .config import EPOCHS, TIMESTEPS
+from .trainer import DenoisingTrainer
+
 from src.datasets.dataset_loader import load_dataset
-from trainer import DenoisingTrainer
 
 
-def main():
+def init_trainer():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     train_loader, val_loader, test_loader = load_dataset(grayscale=True)
@@ -14,6 +15,11 @@ def main():
         train_loader, val_loader, "adam", T=TIMESTEPS, device=device
     )
 
+    return trainer
+
+
+def main():
+    trainer = init_trainer()
     trainer.train(EPOCHS)
 
 
