@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from group_norm import group_norm
-from pos_embedding import sinusoidal_positional_embeddings
+from .pos_embedding import sinusoidal_positional_embeddings
 
 
 class AttentionGate(nn.Module):
@@ -226,10 +225,10 @@ class DenoisingUNet(nn.Module):
         self.up1 = Up(c[1], c[0], time_emb_dim, use_skip)
 
         # Out
-        self.out = nn.Conv2d(c[0], out_channels, 1)
+        self.out = nn.Conv2d(c[0], out_channels, kernel_size=1)
 
     def forward(self, x, t):
-        t_emb = self.time_embeddings[t]
+        t_emb = self.time_embeddings[t - 1]
         t_emb = self.time_mlp(t_emb)
 
         enc1 = self.enc1(x, t_emb)
