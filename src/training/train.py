@@ -1,7 +1,7 @@
 import torch
 
-from .config import EPOCHS, TIMESTEPS
-from .trainer import DenoisingTrainer
+from src.training.config import EPOCHS, TIMESTEPS
+from src.training.trainer import DenoisingTrainer
 
 from src.datasets.dataset_loader import load_dataset
 

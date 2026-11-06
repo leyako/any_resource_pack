@@ -1,7 +1,8 @@
-from .dataset_loader import load_dataset
 from torchvision import datasets
-from .config import TRAIN_PATH
-from utils import denormalize
+
+from src.datasets.dataset_loader import load_dataset
+from src.datasets.config import TRAIN_PATH, BATCH_SIZE
+from src.datasets.utils import denormalize
 
 import matplotlib.pyplot as plt
 import torch
@@ -50,4 +51,7 @@ def show_grayscale_example():
 
 
 if __name__ == "__main__":
-    show_grayscale_example()
+    train_ds, val_ds, _ = load_dataset(val_split=0.1)
+
+    print(len(train_ds) * BATCH_SIZE)
+    print(len(val_ds) * BATCH_SIZE)
