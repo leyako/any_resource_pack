@@ -38,7 +38,7 @@ def denormalize_and_mask(tensor: torch.Tensor, grayscale: bool = False) -> torch
     return rgb * alpha
 
 
-def main():
+def evaluate():
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     BATCH_SIZE = CHUNK_BATCH_SIZE
     TOTAL_IMAGES = TOTAL_REAL_IMAGES  # Same as test set
@@ -63,7 +63,6 @@ def main():
                     "LR",
                     "Timesteps",
                     "Optimizer",
-                    "Scheduler",
                     "FID_Score",
                     "Eval_Time_Seconds",
                 ]
@@ -89,7 +88,7 @@ def main():
     print("Real statistics cached. Starting model evaluations...\n")
 
     # iterate over all saved models
-    model_files = list(models_dir.glob("*cosine*.pt"))
+    model_files = list(models_dir.glob("*.pt"))
 
     for idx, model_path in enumerate(model_files):
         slug = model_path.stem
@@ -97,7 +96,7 @@ def main():
         start_time = time.time()
 
         try:
-            # load Metadata and Weights
+            # load metadata and weights
             checkpoint = torch.load(model_path, map_location=DEVICE, weights_only=False)
             config = checkpoint["hyperparameters"]
 
@@ -162,7 +161,6 @@ def main():
                         config["lr"],
                         config["T"],
                         config["optim"],
-                        config["scheduler"],
                         f"{fid_score:.4f}",
                         f"{eval_time:.2f}",
                     ]
@@ -188,4 +186,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    evaluate()
