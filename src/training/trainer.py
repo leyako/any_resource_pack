@@ -90,7 +90,23 @@ class DenoisingTrainer:
 
         return total_val_loss / len(self.val_loader)
 
-    def train(self, epochs):
+    def save_epoch(self, config, save_dir, val_loss, train_loss):
+        checkpoint = {
+            "model_state_dict": self.denoising_model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "metadata": {
+                "final_val_loss": val_loss,
+                "train_loss": train_loss,
+            },
+            "hyperparameters": config,
+        }
+
+        run_slug = f"run_lr{config['lr']}_T{config['T']}_{config['optim']}_linear_ep{config['epochs']}"
+        save_path = save_dir / f"{run_slug}.pt"
+        torch.save(checkpoint, save_path)
+        print(f"Saved interval checkpoint: {save_path}")
+
+    def train(self, epochs, save_epochs=None, config=None, save_dir=None):
         self.denoising_model.train()
         avg_train_loss = 0.0
         val_loss = 0.0
@@ -117,5 +133,12 @@ class DenoisingTrainer:
                 )
             else:
                 print(f"End of Epoch {epoch} | Train Loss: {avg_train_loss:.4f}")
+
+            # To save the model at different epoch steps
+            if epoch in save_epochs and save_dir is not None and config is not None:
+                # update the config to reflect the exact epoch this was saved at
+                current_config = config.copy()
+                current_config["epochs"] = epoch
+                self.save_epoch(current_config, save_dir, val_loss, avg_train_loss)
 
         return val_loss
