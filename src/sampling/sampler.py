@@ -47,7 +47,7 @@ class Sampler:
 
             x_t = mean + var * z
 
-            if step % 100 == 0:
-                print(f"Step {step} completed")
+        #    if step % 500 == 0:
+         #       print(f"Step {step} completed")
 
         return x_t

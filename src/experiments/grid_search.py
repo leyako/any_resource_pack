@@ -43,7 +43,6 @@ def main():
         "lr": [1e-4, 2e-4, 5e-4],
         "T": [750, 1000],
         "optim": ["adam", "adamw"],
-        "scheduler": ["linear", "cosine"],
     }
 
     # Generate all combinations
@@ -67,7 +66,6 @@ def main():
             trainer = DenoisingTrainer(
                 train_loader=train_loader,
                 val_loader=val_loader,
-                noising_scheduler=config["scheduler"],
                 optim=config["optim"],
                 lr=config["lr"],
                 T=config["T"],

@@ -1,5 +1,5 @@
 from .config import BETA_START, BETA_END
-from .variance_scheduling import linear_scheduler, cosine_scheduler
+from .variance_scheduling import linear_scheduler
 
 from typing import Literal
 
@@ -7,20 +7,13 @@ import torch
 
 
 class NoisingModel:
-    def __init__(
-        self, T, scheduler: Literal["linear", "cosine"], device: str = "cuda"
-    ) -> None:
+    def __init__(self, T, device: str = "cuda") -> None:
         self.device = device
         self.T = T
 
-        if scheduler == "linear":
-            self.betas, self.sigmas, self.sigmas_bar = linear_scheduler(
-                T=T, start=BETA_START, end=BETA_END
-            )
-        elif scheduler == "cosine":
-            self.betas, self.sigmas, self.sigmas_bar = cosine_scheduler(
-                T=T, start=BETA_START, end=BETA_END
-            )
+        self.betas, self.sigmas, self.sigmas_bar = linear_scheduler(
+            T=T, start=BETA_START, end=BETA_END
+        )
 
         self.betas = self.betas.to(self.device)
         self.sigmas = self.sigmas.to(self.device)

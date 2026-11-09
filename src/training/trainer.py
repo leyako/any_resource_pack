@@ -24,7 +24,6 @@ class DenoisingTrainer:
         optim: Literal["adam", "adamw"],
         T: int,
         device: str = "cuda",
-        scheduler: Literal["linear", "cosine"] = SCHEDULER,
         lr: float = LEARNING_RATE,
         base: int = BASE_CHANNELS,
     ) -> None:
@@ -43,9 +42,9 @@ class DenoisingTrainer:
         else:
             self.optimizer = torch.optim.AdamW(self.denoising_model.parameters(), lr=lr)
 
-        self.noising_model = NoisingModel(T=T, scheduler=scheduler, device=self.device)
+        self.noising_model = NoisingModel(T=T, device=self.device)
 
-        self.model_slug = f"{scheduler}-{optim}-{LEARNING_RATE}-{T}-{batch.size(0)}"
+        self.model_slug = f"{optim}-lr{LEARNING_RATE}-T{T}"
 
     def train_step(self, batch):
         batch = batch.to(self.device)
@@ -118,11 +117,5 @@ class DenoisingTrainer:
                 )
             else:
                 print(f"End of Epoch {epoch} | Train Loss: {avg_train_loss:.4f}")
-
-        # print(f"Saving model with last avg_train_loss: {avg_train_loss:.4f}")
-        # torch.save(
-        #     self.denoising_model.state_dict(),
-        #     MODEL_PATH / f"{self.model_slug}-{epochs}-{avg_train_loss:.4f}.pt",
-        # )
 
         return val_loss

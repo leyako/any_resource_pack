@@ -67,9 +67,7 @@ def sample(argv=None):
     model.load_state_dict(torch.load(args.checkpoint, map_location=device))
     model.to(device).eval()
 
-    noising_model = NoisingModel(
-        T=args.timesteps, scheduler=args.scheduler, device=device
-    )
+    noising_model = NoisingModel(T=args.timesteps, device=device)
 
     sampler = Sampler(
         model=model,
