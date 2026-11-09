@@ -8,7 +8,7 @@ images, _ = next(iter(train_loader))
 
 x = images[0]
 
-noising_model = NoisingModel(T=1000, scheduler="cosine")
+noising_model = NoisingModel(T=1000)
 
 new_x, _ = noising_model.sample_at_step(images, 200)
 

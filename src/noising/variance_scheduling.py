@@ -37,6 +37,9 @@ def linear_scheduler(T=1000, start=1e-4, end=0.02):
     return betas, sigmas, sigmas_bar
 
 
+# This is unused because the paper also mentions learned
+# reverse process variances but we won't have time to
+# implement it, interesting to explore though
 def cosine_scheduler(T=1000, start=1e-4, end=0.02, s=0.008):
     """Cosine scheduler explained in the "Improved DDPM" paper (Nichol & Dhariwal, 2021)
 

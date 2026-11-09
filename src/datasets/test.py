@@ -1,9 +1,3 @@
-"""
-Sanity check + report figure for the grayscale preprocessing pipeline.
-
-    python3 -m src.datasets.test
-"""
-
 import matplotlib.pyplot as plt
 import torch
 from torchvision import datasets
