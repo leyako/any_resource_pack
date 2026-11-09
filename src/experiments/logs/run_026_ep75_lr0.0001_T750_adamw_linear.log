@@ -1,0 +1,6 @@
+2026-11-07 04:19:06,183 - --- Starting run_026_ep75_lr0.0001_T750_adamw_linear ---
+2026-11-07 04:19:06,183 - Config: {'epochs': 75, 'lr': 0.0001, 'T': 750, 'optim': 'adamw', 'scheduler': 'linear'}
+2026-11-07 04:37:47,870 - Completed in 1121.69s | Final Val Loss: 0.037600
+2026-11-07 04:37:48,090 - Saved checkpoint to src/experiments/models/run_026_ep75_lr0.0001_T750_adamw_linear.pt
+2026-11-07 04:37:48,210 - VRAM cleared. Moving to next run.
+
