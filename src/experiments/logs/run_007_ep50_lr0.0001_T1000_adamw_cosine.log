@@ -1,0 +1,6 @@
+2026-11-07 00:12:14,124 - --- Starting run_007_ep50_lr0.0001_T1000_adamw_cosine ---
+2026-11-07 00:12:14,124 - Config: {'epochs': 50, 'lr': 0.0001, 'T': 1000, 'optim': 'adamw', 'scheduler': 'cosine'}
+2026-11-07 00:24:38,418 - Completed in 744.29s | Final Val Loss: 0.039271
+2026-11-07 00:24:38,625 - Saved checkpoint to src/experiments/models/run_007_ep50_lr0.0001_T1000_adamw_cosine.pt
+2026-11-07 00:24:38,744 - VRAM cleared. Moving to next run.
+

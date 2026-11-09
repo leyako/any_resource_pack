@@ -1,0 +1,6 @@
+2026-11-07 04:00:39,613 - --- Starting run_025_ep75_lr0.0001_T750_adam_cosine ---
+2026-11-07 04:00:39,613 - Config: {'epochs': 75, 'lr': 0.0001, 'T': 750, 'optim': 'adam', 'scheduler': 'cosine'}
+2026-11-07 04:19:05,860 - Completed in 1106.25s | Final Val Loss: 0.034478
+2026-11-07 04:19:06,065 - Saved checkpoint to src/experiments/models/run_025_ep75_lr0.0001_T750_adam_cosine.pt
+2026-11-07 04:19:06,182 - VRAM cleared. Moving to next run.
+
