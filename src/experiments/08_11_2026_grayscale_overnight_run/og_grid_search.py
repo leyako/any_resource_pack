@@ -28,7 +28,7 @@ def main():
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
     # setup experiment directories
-    base_dir = Path("src/experiments")
+    base_dir = Path(__file__).parent
     models_dir = base_dir / "models"
     logs_dir = base_dir / "logs"
     models_dir.mkdir(parents=True, exist_ok=True)
@@ -83,6 +83,7 @@ def main():
             # bundle metadata and weights
             checkpoint = {
                 "model_state_dict": trainer.denoising_model.state_dict(),
+                "optim_state_dict": trainer.optimizer.state_dict(),
                 "metadata": {
                     "training_time_seconds": training_time,
                     "final_val_loss": final_val_loss,
