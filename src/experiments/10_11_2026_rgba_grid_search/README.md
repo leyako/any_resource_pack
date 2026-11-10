@@ -1,0 +1,1 @@
+This time, we are doing a grid search for the RGBA images.
