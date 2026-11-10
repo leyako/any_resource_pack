@@ -21,7 +21,7 @@ def rgba_grid_search():
 
     param_grid = {
         "lr": [1e-4, 2e-4, 3e-4],
-        "T": [750, 1000],
+        "T": [500, 750, 1000],
         "optim": ["adamw"],
         "epochs": [100, 150, 200],
     }
