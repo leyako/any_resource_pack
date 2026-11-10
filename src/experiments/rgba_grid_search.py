@@ -1,6 +1,7 @@
 import gc
 import time
 import traceback
+import itertools
 import torch
 from pathlib import Path
 
@@ -8,39 +9,40 @@ from src.training.trainer import DenoisingTrainer
 from src.datasets.dataset_loader import load_dataset
 
 
-def train_models():
+def rgba_grid_search():
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-    base_dir = Path(__file__).parent
-    models_dir = base_dir / "models"
+    base_dir = Path("src/experiments")
+    models_dir = base_dir / "rgba_models"
     models_dir.mkdir(parents=True, exist_ok=True)
 
-    # load dataset
-    train_loader, val_loader, _ = load_dataset(grayscale=True, val_split=0.2)
+    # Load 4-channel dataset
+    train_loader, val_loader, _ = load_dataset(grayscale=False, val_split=0.2)
 
-    best_configs = [
-        {"lr": 5e-4, "T": 750, "optim": "adamw"},
-        {"lr": 1e-4, "T": 750, "optim": "adamw"},
-        {"lr": 2e-4, "T": 750, "optim": "adam"},
-        {"lr": 5e-4, "T": 1000, "optim": "adamw"},
-        {"lr": 2e-4, "T": 750, "optim": "adamw"},
-        {"lr": 1e-4, "T": 1000, "optim": "adamw"},
-        {"lr": 5e-4, "T": 750, "optim": "adam"},
-        {"lr": 1e-4, "T": 750, "optim": "adam"},
-        {"lr": 2e-4, "T": 1000, "optim": "adamw"},
-        {"lr": 1e-4, "T": 1000, "optim": "adam"},
+    param_grid = {
+        "lr": [1e-4, 2e-4, 3e-4],
+        "T": [750, 1000],
+        "optim": ["adamw"],
+        "epochs": [100, 150, 200],
+    }
+
+    keys = ["lr", "T", "optim"]
+    unique_configs = [
+        dict(zip(keys, v))
+        for v in itertools.product(
+            param_grid["lr"], param_grid["T"], param_grid["optim"]
+        )
     ]
 
-    TOTAL_EPOCHS = 200
-    SAVE_EPOCHS = [100, 125, 150, 175, 200]
+    SAVE_EPOCHS = param_grid["epochs"]
+    TOTAL_EPOCHS = SAVE_EPOCHS[-1]
 
-    for i, config in enumerate(best_configs):
-        print(
-            f"\n[{i+1}/{len(best_configs)}] Starting Top 10 tuning for config: {config}"
-        )
+    for i, config in enumerate(unique_configs):
+        print(f"\n[{i+1}/{len(unique_configs)}] Starting RGBA Run: {config}")
 
-        # build the full config for the evaluation script
         full_config = config.copy()
+        full_config["scheduler"] = "linear"
+        full_config["channels"] = 4
 
         try:
             trainer = DenoisingTrainer(
@@ -63,7 +65,6 @@ def train_models():
             print(f"FAILED run {i+1}:\n{traceback.format_exc()}")
 
         finally:
-            # strict VRAM cleanup
             if "trainer" in locals():
                 del trainer.denoising_model
                 del trainer.optimizer
@@ -75,4 +76,4 @@ def train_models():
 
 
 if __name__ == "__main__":
-    train_models()
+    rgba_grid_search()

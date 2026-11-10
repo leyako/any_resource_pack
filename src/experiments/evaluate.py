@@ -73,8 +73,8 @@ def evaluate():
     # normalize=True allows us to feed [0,1] float tensors directly
     base_fid = FrechetInceptionDistance(feature=2048, normalize=True).to(DEVICE)
 
-    _, _, test_loader = load_dataset(grayscale=True, val_split=0.2)
-
+    _, _, test_loader = load_dataset(grayscale=False, val_split=0.2)
+    channels = next(iter(test_loader))[0].size(1)
     # Compute real image stats exactly ONCE
     with torch.no_grad():
         for batch in test_loader:
@@ -101,8 +101,8 @@ def evaluate():
             config = checkpoint["hyperparameters"]
 
             model = DenoisingUNet(
-                in_channels=2,  # Assuming grayscale (Luminance + Alpha)
-                out_channels=2,
+                in_channels=channels,
+                out_channels=channels,
                 T=config["T"],
             )
             model.load_state_dict(checkpoint["model_state_dict"])
@@ -114,7 +114,7 @@ def evaluate():
                 model=model,
                 noising_model=noising_model,
                 img_size=32,
-                channels=2,
+                channels=channels,
                 device=DEVICE,
             )
 
