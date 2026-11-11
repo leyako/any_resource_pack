@@ -42,7 +42,7 @@ def evaluate():
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     BATCH_SIZE = CHUNK_BATCH_SIZE
     TOTAL_IMAGES = TOTAL_REAL_IMAGES  # Same as test set
-    GRAYSCALE = True
+    GRAYSCALE = False
 
     # setup Directories & CSV
     base_dir = Path(__file__).parent
@@ -73,7 +73,7 @@ def evaluate():
     # normalize=True allows us to feed [0,1] float tensors directly
     base_fid = FrechetInceptionDistance(feature=2048, normalize=True).to(DEVICE)
 
-    _, _, test_loader = load_dataset(grayscale=False, val_split=0.2)
+    _, _, test_loader = load_dataset(grayscale=GRAYSCALE, val_split=0.2)
     channels = next(iter(test_loader))[0].size(1)
     # Compute real image stats exactly ONCE
     with torch.no_grad():
