@@ -20,8 +20,8 @@ def rgba_grid_search():
     train_loader, val_loader, _ = load_dataset(grayscale=False, val_split=0.2)
 
     param_grid = {
-        "lr": [1e-4, 2e-4, 3e-4],
-        "T": [500, 750, 1000],
+        "lr": [3e-4],
+        "T": [1000],
         "optim": ["adamw"],
         "epochs": [100, 150, 200],
     }
