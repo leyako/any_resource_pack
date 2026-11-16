@@ -5,7 +5,8 @@ import torch
 from hyperparams.config import (
     FIGURES_PATH,
     IMG_SIZE,
-    LATEST_CHECKPOINT,
+    RGBA_MODEL,
+    GRAYSCALE_MODEL,
     SCHEDULER,
     TIMESTEPS,
     get_device,
@@ -22,9 +23,9 @@ def parse_args(argv=None):
         description="Generate texture samples from a trained DDPM checkpoint."
     )
     parser.add_argument(
-        "--checkpoint",
-        default=str(LATEST_CHECKPOINT),
-        help="Path to the model weights (.pt).",
+        "--model",
+        default=str(RGBA_MODEL),
+        help="Path to the model weights (.pt). Defaults to RGBA model.",
     )
     parser.add_argument("--n", type=int, default=32, help="How many images to sample.")
     parser.add_argument("--timesteps", type=int, default=TIMESTEPS, help="T")
@@ -63,8 +64,11 @@ def sample(argv=None):
 
     print(f"Device: {device} | checkpoint: {args.checkpoint}")
 
+    checkpoint = torch.load(args.model, map_location=device, weights_only=False)
+
     model = DenoisingUNet(in_channels=channels, out_channels=channels, T=args.timesteps)
-    model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+
+    model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device).eval()
 
     noising_model = NoisingModel(T=args.timesteps, device=device)
@@ -83,7 +87,13 @@ def sample(argv=None):
     print(f"Generated tensor shape: {generated_images.shape}")
 
     out_path = args.out or FIGURES_PATH / f"samples_{args.n}.png"
-    show_image(generated_images, grayscale=grayscale, out_path=out_path, show=args.show)
+    show_image(
+        generated_images,
+        slug=args.checkpoint,
+        grayscale=grayscale,
+        out_path=out_path,
+        show=args.show,
+    )
 
 
 if __name__ == "__main__":

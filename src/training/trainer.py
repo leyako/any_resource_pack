@@ -135,7 +135,12 @@ class DenoisingTrainer:
                 print(f"End of Epoch {epoch} | Train Loss: {avg_train_loss:.4f}")
 
             # To save the model at different epoch steps
-            if epoch in save_epochs and save_dir is not None and config is not None:
+            if (
+                save_epochs != None
+                and epoch in save_epochs
+                and save_dir is not None
+                and config is not None
+            ):
                 # update the config to reflect the exact epoch this was saved at
                 current_config = config.copy()
                 current_config["epochs"] = epoch
