@@ -1,3 +1,3 @@
-# Beta values set according to the DDPM paper
-BETA_START = 1e-4
-BETA_END = 0.02
+"""Re-export of the noising hyperparameters. Edit `hyperparams/config.py` instead."""
+
+from hyperparams.config import BETA_START, BETA_END, SCHEDULER, TIMESTEPS  # noqa: F401

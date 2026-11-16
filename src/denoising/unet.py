@@ -2,6 +2,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from hyperparams.config import (
+    BASE_CHANNELS,
+    DROPOUT_RATE,
+    GROUP_NORM_GROUPS,
+    TIME_EMB_DIM,
+    TIMESTEPS,
+    USE_SKIP,
+)
+
 from .pos_embedding import sinusoidal_positional_embeddings
 
 
@@ -67,11 +76,17 @@ class DoubleConv(nn.Module):
     and maximum 32 channels per group.
     """
 
-    def __init__(self, c_in, c_out, time_emb_dim=512, dropout_rate: float = 0.1):
+    def __init__(
+        self,
+        c_in,
+        c_out,
+        time_emb_dim: int = TIME_EMB_DIM,
+        dropout_rate: float = DROPOUT_RATE,
+    ):
         super().__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(c_in, c_out, 3, padding=1),  # DONE
-            nn.GroupNorm(num_groups=32, num_channels=c_out),
+            nn.GroupNorm(num_groups=GROUP_NORM_GROUPS, num_channels=c_out),
             nn.ReLU(),
         )
 
@@ -82,7 +97,7 @@ class DoubleConv(nn.Module):
 
         self.conv2 = nn.Sequential(
             nn.Conv2d(c_out, c_out, 3, padding=1),
-            nn.GroupNorm(num_groups=32, num_channels=c_out),
+            nn.GroupNorm(num_groups=GROUP_NORM_GROUPS, num_channels=c_out),
             nn.ReLU(),
         )
 
@@ -184,9 +199,9 @@ class DenoisingUNet(nn.Module):
         self,
         in_channels,
         out_channels,
-        base: int = 64,
-        use_skip: bool = True,
-        T: int = 1000,
+        base: int = BASE_CHANNELS,
+        use_skip: bool = USE_SKIP,
+        T: int = TIMESTEPS,
     ) -> None:
         super().__init__()
         c = [
@@ -197,7 +212,7 @@ class DenoisingUNet(nn.Module):
             base * 16,  # 1024
         ]  # Number of channels per feature map
 
-        time_emb_dim = 512
+        time_emb_dim = TIME_EMB_DIM
         time_embeddings = sinusoidal_positional_embeddings(T, time_emb_dim)
         self.register_buffer("time_embeddings", time_embeddings)
 

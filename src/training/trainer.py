@@ -4,7 +4,13 @@ from tqdm import tqdm
 from src.denoising.unet import DenoisingUNet
 from src.noising.noising_model import NoisingModel
 
-from src.training.config import LEARNING_RATE, MODEL_PATH
+from hyperparams.config import (
+    BASE_CHANNELS,
+    LATEST_CHECKPOINT,
+    LEARNING_RATE,
+    MODEL_PATH,
+    SCHEDULER,
+)
 
 import torch
 import torch.nn.functional as F
@@ -18,6 +24,9 @@ class DenoisingTrainer:
         optim: Literal["adam", "adamw"],
         T: int,
         device: str = "cuda",
+        scheduler: Literal["linear", "cosine"] = SCHEDULER,
+        lr: float = LEARNING_RATE,
+        base: int = BASE_CHANNELS,
     ) -> None:
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -25,20 +34,22 @@ class DenoisingTrainer:
         self.device = device
 
         batch, _ = next(iter(train_loader))
-        self.denoising_model = DenoisingUNet(batch.size(1), batch.size(1), T=T).to(
-            self.device
-        )
+        self.denoising_model = DenoisingUNet(
+            batch.size(1), batch.size(1), base=base, T=T
+        ).to(self.device)
 
         if optim == "adam":
             self.optimizer = torch.optim.Adam(
-                self.denoising_model.parameters(), lr=LEARNING_RATE
+                self.denoising_model.parameters(), lr=lr
             )
         else:
             self.optimizer = torch.optim.AdamW(
-                self.denoising_model.parameters(), lr=LEARNING_RATE
+                self.denoising_model.parameters(), lr=lr
             )
 
-        self.noising_model = NoisingModel(T=T, scheduler="linear", device=self.device)
+        self.noising_model = NoisingModel(
+            T=T, scheduler=scheduler, device=self.device
+        )
 
     def train_step(self, batch):
         batch = batch.to(self.device)
@@ -112,7 +123,12 @@ class DenoisingTrainer:
                 print(f"End of Epoch {epoch} | Train Loss: {avg_train_loss:.4f}")
 
         print(f"Saving model with last avg_train_loss: {avg_train_loss:.4f}")
-        torch.save(
-            self.denoising_model.state_dict(),
-            MODEL_PATH / f"denoising-{avg_train_loss:.2f}-{epochs}.pt",
-        )
+
+        run_path = MODEL_PATH / f"denoising-{avg_train_loss:.2f}-{epochs}.pt"
+        torch.save(self.denoising_model.state_dict(), run_path)
+
+        # Stable name so sampling has a default checkpoint to pick up
+        torch.save(self.denoising_model.state_dict(), LATEST_CHECKPOINT)
+
+        print(f"Saved {run_path} and {LATEST_CHECKPOINT}")
+        return run_path

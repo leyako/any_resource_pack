@@ -1,9 +1,10 @@
-from pathlib import Path
+"""Re-export of the training hyperparameters. Edit `hyperparams/config.py` instead."""
 
-FOLDER_PATH = Path(__file__).parent
-MODEL_PATH = FOLDER_PATH / "models"
-
-TIMESTEPS = 1000
-
-EPOCHS = 20
-LEARNING_RATE = 2e-4
+from hyperparams.config import (  # noqa: F401
+    EPOCHS,
+    LATEST_CHECKPOINT,
+    LEARNING_RATE,
+    MODEL_PATH,
+    OPTIMIZER,
+    TIMESTEPS,
+)

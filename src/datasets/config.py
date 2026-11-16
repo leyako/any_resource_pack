@@ -1,20 +1,14 @@
-import os
+"""Re-export of the dataset hyperparameters. Edit `hyperparams/config.py` instead."""
 
-from dotenv import load_dotenv
-from pathlib import Path
-
-load_dotenv()
-
-DATASET_NAME = "mc-items-32x"
-DATASET_VERSION = "310p"
-
-# Path stuff
-ROOT = Path(__file__).parent.parent.parent
-DATASET_PATH = ROOT / "dataset" / "data" / DATASET_NAME / DATASET_VERSION
-TRAIN_PATH = DATASET_PATH / "train"
-TEST_PATH = DATASET_PATH / "test"
-
-HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN", None)
-
-# Hyperparameters
-BATCH_SIZE = 32
+from hyperparams.config import (  # noqa: F401
+    BATCH_SIZE,
+    DATASET_NAME,
+    DATASET_PATH,
+    DATASET_VERSION,
+    GRAYSCALE,
+    HF_AUTH_TOKEN,
+    ROOT,
+    TEST_PATH,
+    TRAIN_PATH,
+    VAL_SPLIT,
+)

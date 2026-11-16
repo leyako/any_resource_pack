@@ -1,6 +1,6 @@
 import torch
 
-from .config import TRAIN_PATH, TEST_PATH, BATCH_SIZE
+from .config import TRAIN_PATH, TEST_PATH, BATCH_SIZE, GRAYSCALE, VAL_SPLIT
 from PIL import Image
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets
@@ -115,7 +115,18 @@ def rgba_loader(path: str) -> Image.Image:
         return img.convert("RGBA")
 
 
-def load_dataset(grayscale: bool = False, val_split: float = 0.2):
+def load_dataset(
+    grayscale: bool = GRAYSCALE,
+    val_split: float = VAL_SPLIT,
+    batch_size: int = BATCH_SIZE,
+):
+    if not TRAIN_PATH.exists():
+        raise FileNotFoundError(
+            f"Dataset not found at {TRAIN_PATH}.\n"
+            "The dataset is a git submodule: run "
+            "`git submodule update --init --recursive` first."
+        )
+
     train_tf = get_transforms(grayscale=grayscale, is_train=True)
     test_tf = get_transforms(grayscale=grayscale, is_train=False)
 
@@ -138,13 +149,13 @@ def load_dataset(grayscale: bool = False, val_split: float = 0.2):
     test_ds = datasets.ImageFolder(TEST_PATH, transform=test_tf, loader=rgba_loader)
 
     train_loader = DataLoader(
-        train_ds, batch_size=BATCH_SIZE, shuffle=True, pin_memory=is_cuda
+        train_ds, batch_size=batch_size, shuffle=True, pin_memory=is_cuda
     )
     val_loader = DataLoader(
-        val_ds, batch_size=BATCH_SIZE, shuffle=False, pin_memory=is_cuda
+        val_ds, batch_size=batch_size, shuffle=False, pin_memory=is_cuda
     )
     test_loader = DataLoader(
-        test_ds, batch_size=BATCH_SIZE, shuffle=False, pin_memory=is_cuda
+        test_ds, batch_size=batch_size, shuffle=False, pin_memory=is_cuda
     )
 
     return train_loader, val_loader, test_loader

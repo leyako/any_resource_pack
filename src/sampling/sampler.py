@@ -1,4 +1,3 @@
-from src.training.trainer import DenoisingTrainer
 from .variance_scheduling import reverse_var_scheduler
 
 import torch
