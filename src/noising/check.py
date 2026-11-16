@@ -1,12 +1,3 @@
-"""
-Self-check of the forward process. Needs neither the dataset nor torchvision.
-
-    python3 -m src.noising.check
-
-Noises a synthetic sprite at increasing timesteps and asserts that the measured
-statistics match what the schedule predicts.
-"""
-
 import torch
 
 from hyperparams.config import IMG_SIZE, SCHEDULER, TIMESTEPS, set_seed
@@ -23,7 +14,7 @@ def synthetic_batch(batch_size: int = 256, channels: int = 2) -> torch.Tensor:
 def main():
     set_seed(0)
 
-    model = NoisingModel(T=TIMESTEPS, scheduler=SCHEDULER, device="cpu")
+    model = NoisingModel(T=TIMESTEPS, device="cpu")
     x0 = synthetic_batch()
 
     print(f"schedule={SCHEDULER}  T={TIMESTEPS}  x0 std={x0.std():.3f}")
@@ -50,9 +41,9 @@ def main():
         assert x_t.shape == x0.shape, "noising must preserve shape"
         assert eps.shape == x0.shape, "epsilon must match the input shape"
         assert torch.isfinite(x_t).all(), "noised batch contains NaN or inf"
-        assert abs(x_t.std() - expected) < 0.05, (
-            f"std mismatch at t={t}: {x_t.std():.3f} vs {expected:.3f}"
-        )
+        assert (
+            abs(x_t.std() - expected) < 0.05
+        ), f"std mismatch at t={t}: {x_t.std():.3f} vs {expected:.3f}"
 
     # The closed form must be reproducible under a fixed seed.
     set_seed(1)

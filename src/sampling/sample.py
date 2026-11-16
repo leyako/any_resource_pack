@@ -60,9 +60,7 @@ def sample(argv=None):
     img_size = hp.get("img_size", IMG_SIZE)
     base = hp.get("base", 64)
     use_skip = hp.get("use_skip", True)
-
-    first_weight = next(iter(checkpoint["model_state_dict"].values()))
-    channels = first_weight.shape[1]
+    channels = checkpoint["model_state_dict"]["enc1.conv1.0.weight"].shape[1]
 
     grayscale = channels == 2
 

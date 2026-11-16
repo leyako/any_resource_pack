@@ -1,9 +1,11 @@
 import argparse
+from pathlib import Path
 
 from hyperparams.config import (
     BATCH_SIZE,
     EPOCHS,
     LEARNING_RATE,
+    MODEL_PATH,
     OPTIMIZER,
     SCHEDULER,
     TIMESTEPS,
@@ -23,15 +25,26 @@ def parse_args(argv=None):
     parser.add_argument("--timesteps", type=int, default=TIMESTEPS, help="T")
     parser.add_argument("--lr", type=float, default=LEARNING_RATE)
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE)
-    parser.add_argument(
-        "--scheduler", choices=["linear", "cosine"], default=SCHEDULER
-    )
+    parser.add_argument("--scheduler", choices=["linear", "cosine"], default=SCHEDULER)
     parser.add_argument("--optim", choices=["adam", "adamw"], default=OPTIMIZER)
     parser.add_argument("--val-split", type=float, default=VAL_SPLIT)
     parser.add_argument(
         "--rgba",
         action="store_true",
         help="Train on 4-channel RGBA instead of the default grayscale+alpha.",
+    )
+    parser.add_argument(
+        "--save-dir",
+        type=Path,
+        default=MODEL_PATH,
+        help="Directory where checkpoints (.pt) will be saved.",
+    )
+    parser.add_argument(
+        "--save-epochs",
+        type=int,
+        nargs="*",
+        default=None,
+        help="Optional intermediate epochs to save (final epoch is always saved).",
     )
     parser.add_argument(
         "--device", default=None, help="cuda | mps | cpu (auto-detected by default)"
@@ -57,6 +70,7 @@ def init_trainer(args):
         T=args.timesteps,
         device=device,
         lr=args.lr,
+        scheduler=args.scheduler,
     )
 
 
@@ -67,7 +81,11 @@ def main(argv=None):
         set_seed(args.seed)
 
     trainer = init_trainer(args)
-    trainer.train(args.epochs)
+    trainer.train(
+        epochs=args.epochs,
+        save_epochs=args.save_epochs,
+        save_dir=args.save_dir,
+    )
 
 
 if __name__ == "__main__":

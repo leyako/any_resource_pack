@@ -1,19 +1,18 @@
+from pathlib import Path
 from typing import Literal
-from tqdm import tqdm
 
-from src.denoising.unet import DenoisingUNet
-from src.noising.noising_model import NoisingModel
+import torch
+import torch.nn.functional as F
+from tqdm import tqdm
 
 from hyperparams.config import (
     BASE_CHANNELS,
-    LATEST_CHECKPOINT,
     LEARNING_RATE,
     MODEL_PATH,
     SCHEDULER,
 )
-
-import torch
-import torch.nn.functional as F
+from src.denoising.unet import DenoisingUNet
+from src.noising.noising_model import NoisingModel
 
 
 class DenoisingTrainer:
@@ -26,11 +25,15 @@ class DenoisingTrainer:
         device: str = "cuda",
         lr: float = LEARNING_RATE,
         base: int = BASE_CHANNELS,
+        scheduler: str = SCHEDULER,
     ) -> None:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.T = T
         self.device = device
+        self.lr = lr
+        self.optim = optim
+        self.scheduler = scheduler
 
         batch, _ = next(iter(train_loader))
         self.denoising_model = DenoisingUNet(
@@ -44,7 +47,7 @@ class DenoisingTrainer:
 
         self.noising_model = NoisingModel(T=T, device=self.device)
 
-        self.model_slug = f"{optim}-lr{LEARNING_RATE}-T{T}"
+        self.model_slug = f"{optim}-lr{lr}-T{T}"
 
     def train_step(self, batch):
         batch = batch.to(self.device)
@@ -91,6 +94,9 @@ class DenoisingTrainer:
         return total_val_loss / len(self.val_loader)
 
     def save_epoch(self, config, save_dir, val_loss, train_loss):
+        save_dir = Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
+
         checkpoint = {
             "model_state_dict": self.denoising_model.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
@@ -101,15 +107,34 @@ class DenoisingTrainer:
             "hyperparameters": config,
         }
 
-        run_slug = f"run_lr{config['lr']}_T{config['T']}_{config['optim']}_linear_ep{config['epochs']}"
+        run_slug = (
+            f"run_lr{config['lr']}_T{config['T']}_"
+            f"{config['optim']}_{config.get('scheduler', 'linear')}_ep{config['epochs']}"
+        )
         save_path = save_dir / f"{run_slug}.pt"
         torch.save(checkpoint, save_path)
-        print(f"Saved interval checkpoint: {save_path}")
+        print(f"Saved checkpoint: {save_path}")
 
     def train(self, epochs, save_epochs=None, config=None, save_dir=None):
         self.denoising_model.train()
         avg_train_loss = 0.0
         val_loss = 0.0
+
+        base_config = {
+            "lr": self.lr,
+            "T": self.T,
+            "optim": self.optim,
+            "epochs": epochs,
+            "scheduler": self.scheduler,
+        }
+        if config is not None:
+            base_config.update(config)
+
+        target_dir = Path(save_dir) if save_dir is not None else Path(MODEL_PATH)
+
+        epochs_to_save = set(save_epochs) if save_epochs is not None else set()
+        epochs_to_save.add(epochs)
+
         for epoch in range(1, epochs + 1):
             epoch_loss = 0.0
 
@@ -134,16 +159,9 @@ class DenoisingTrainer:
             else:
                 print(f"End of Epoch {epoch} | Train Loss: {avg_train_loss:.4f}")
 
-            # To save the model at different epoch steps
-            if (
-                save_epochs != None
-                and epoch in save_epochs
-                and save_dir is not None
-                and config is not None
-            ):
-                # update the config to reflect the exact epoch this was saved at
-                current_config = config.copy()
+            if epoch in epochs_to_save:
+                current_config = base_config.copy()
                 current_config["epochs"] = epoch
-                self.save_epoch(current_config, save_dir, val_loss, avg_train_loss)
+                self.save_epoch(current_config, target_dir, val_loss, avg_train_loss)
 
         return val_loss
