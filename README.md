@@ -1,4 +1,4 @@
-# any_resource_pack
+# Any Resource Pack
 
 A DDPM (Denoising Diffusion Probabilistic Model) that generates 32x32 Minecraft
 item textures, trained on sprites scraped from community PVP texture packs.
@@ -26,7 +26,7 @@ the UNet widths, the learning rate, and the output folders.
 The per-module `config.py` files (`src/training/`, `src/noising/`, `src/datasets/`)
 only re-export from it, so one edit propagates everywhere.
 
-Every CLI flag below defaults to the value in that file — flags are for
+Every CLI flag below defaults to the value in that file, flags are for
 one-off experiments, the config file is for the project's real settings.
 
 The device (`cuda`, `mps`, or `cpu`) is auto-detected; override with `--device`.
@@ -42,27 +42,27 @@ python3 -m src.training.train --epochs 50 --scheduler cosine --lr 1e-4 --batch-s
 ```
 
 Checkpoints are written to `src/training/models/`:
-- `denoising-<loss>-<epochs>.pt` — one file per run
-- `denoising-latest.pt` — overwritten each run, used as the default for sampling
+- `denoising-<loss>-<epochs>.pt` : one file per run
+- `denoising-latest.pt` : overwritten each run, used as the default for sampling
 
 Useful flags: `--timesteps`, `--optim {adam,adamw}`, `--val-split`, `--rgba`
 (train on 4-channel colour instead of the default grayscale+alpha), `--seed`.
 
 ## Generation
-
 ```bash
-# Sample 32 images from the latest checkpoint
+# Sample 32 images from the default checkpoint
 python3 -m src.sampling.sample
 
-# From a specific checkpoint, into a specific file
-python3 -m src.sampling.sample --checkpoint src/training/models/denoising-0.05-20.pt \
+# From a specific style (rgba or grayscale), into a specific file
+python3 -m src.sampling.sample --model rgba \
     --n 64 --out figures/final_samples.png --seed 0
 ```
 
-Output goes to `figures/samples_<n>.png` by default. Add `--show` to also open a window.
+Model hyperparameters (`T`, `img_size`, `channels`, etc.) are automatically inferred from the checkpoint metadata.
 
-Sampling runs the full reverse chain, so it costs `T` forward passes of the UNet
-(1000 by default) — a few minutes on CPU for a batch of 32.
+Output goes to `figures/samples_<n>.png` by default. Add `--show` to also open a window (and `--device` to override auto-detected `cuda` / `mps` / `cpu`).
+
+Sampling runs the full reverse chain, so it costs `T` forward passes of the UNet (as saved in the checkpoint).
 
 ## Noising (forward process)
 
@@ -118,7 +118,7 @@ The UNet architecture diagram is drawn in Typst inside the report itself, not he
 
 ## Building the dataset
 
-Only needed to rebuild the dataset from scratch — normally the submodule is enough.
+Only needed to rebuild the dataset from scratch, but only doable by the workers of this project.
 Requires `HF_AUTH_TOKEN` in a `.env` file at the repository root.
 
 ```bash
