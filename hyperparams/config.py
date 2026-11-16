@@ -17,7 +17,6 @@ ROOT = Path(__file__).parent.parent
 
 DATASET_NAME = "mc-items-32x"
 
-# Number of texture packs the subset was built from; must already exist on disk.
 DATASET_VERSION = "310p"
 
 DATASET_PATH = ROOT / "dataset" / "data" / DATASET_NAME / DATASET_VERSION
@@ -28,16 +27,12 @@ IMG_SIZE = 32
 BATCH_SIZE = 32
 VAL_SPLIT = 0.2
 
-# Keep luminance + alpha (2 channels) instead of RGBA: colour varies across
-# packs, geometry does not.
 GRAYSCALE = False
 
-# T, shared by the forward and reverse processes. Sampling costs T network passes.
 TIMESTEPS = 1000
 
-SCHEDULER = "linear"  # "linear" | "cosine"
+SCHEDULER = "linear"
 
-# Schedule endpoints, from the DDPM paper (Ho et al., 2020).
 BETA_START = 1e-4
 BETA_END = 0.02
 
@@ -45,27 +40,24 @@ BETA_END = 0.02
 # so 64 -> 128 -> 256 -> 512 -> 1024 at the bottleneck.
 BASE_CHANNELS = 64
 
-# Dimension of the sinusoidal timestep embeddings (Vaswani et al., 2017).
 TIME_EMB_DIM = 512
 
-# GroupNorm rather than BatchNorm: batches are small and their statistics shift
-# with the noise level.
 GROUP_NORM_GROUPS = 32
 
 DROPOUT_RATE = 0.1
 
-# Skip connections, gated by attention. False to ablate them.
 USE_SKIP = True
 
 EPOCHS = 20
 LEARNING_RATE = 2e-4
-OPTIMIZER = "adam"  # "adam" | "adamw"
+OPTIMIZER = "adam"
 
 MODEL_PATH = ROOT / "src" / "training" / "models"
 FIGURES_PATH = ROOT / "figures"
 
-# Fixed name rewritten after every run, so sampling has a default checkpoint.
 LATEST_CHECKPOINT = MODEL_PATH / "denoising-latest.pt"
+RGBA_MODEL = MODEL_PATH / "rgba_model.pt"
+GRAYSCALE_MODEL = MODEL_PATH / "grayscale_model.pt"
 
 MODEL_PATH.mkdir(parents=True, exist_ok=True)
 FIGURES_PATH.mkdir(parents=True, exist_ok=True)
