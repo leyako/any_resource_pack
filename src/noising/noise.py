@@ -1,12 +1,3 @@
-"""
-Forward process: noises 3 random dataset sprites at 7 timesteps.
-
-    python3 -m src.noising.noise
-
-Uses the closed form of q(x_t | x_0), so any t costs a single operation. Needs
-only torch and pillow. Every run draws different sprites.
-"""
-
 import random
 
 import matplotlib.pyplot as plt
@@ -31,7 +22,6 @@ N_STEPS = 7
 def main():
     device = get_device()
 
-    # N_STEPS points evenly spaced over [0, T], endpoints included.
     steps = [round(i * TIMESTEPS / (N_STEPS - 1)) for i in range(N_STEPS)]
 
     sprites = sorted(DATASET_PATH.rglob("*.png"))
@@ -45,7 +35,7 @@ def main():
     for p in paths:
         print(f"  picked {p}")
 
-    model = NoisingModel(T=TIMESTEPS, scheduler=SCHEDULER, device=device)
+    model = NoisingModel(T=TIMESTEPS, device=device)
 
     _, axes = plt.subplots(
         N_IMAGES, N_STEPS, figsize=(N_STEPS * 1.5, N_IMAGES * 1.65), squeeze=False
@@ -72,8 +62,14 @@ def main():
             if col == 0:
                 # Label by item class: the filename also carries the pack name.
                 ax.text(
-                    -0.08, 0.5, path.parent.name, transform=ax.transAxes,
-                    rotation=90, va="center", ha="right", fontsize=8,
+                    -0.08,
+                    0.5,
+                    path.parent.name,
+                    transform=ax.transAxes,
+                    rotation=90,
+                    va="center",
+                    ha="right",
+                    fontsize=8,
                 )
 
     plt.tight_layout()

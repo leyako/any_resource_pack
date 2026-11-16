@@ -77,7 +77,6 @@ def get_device(preferred: str | None = None) -> str:
 
 
 def set_seed(seed: int) -> None:
-    """Seeds every RNG. Needed to reproduce a batch of samples or a figure."""
     import random
 
     import numpy as np

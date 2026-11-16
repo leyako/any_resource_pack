@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import torch
 
@@ -7,7 +8,6 @@ from hyperparams.config import (
     IMG_SIZE,
     RGBA_MODEL,
     GRAYSCALE_MODEL,
-    SCHEDULER,
     TIMESTEPS,
     get_device,
     set_seed,
@@ -24,18 +24,10 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "--model",
-        default=str(RGBA_MODEL),
-        help="Path to the model weights (.pt). Defaults to RGBA model.",
+        default="rgba",
+        help="'rgba' or 'grayscale'.",
     )
     parser.add_argument("--n", type=int, default=32, help="How many images to sample.")
-    parser.add_argument("--timesteps", type=int, default=TIMESTEPS, help="T")
-    parser.add_argument("--scheduler", choices=["linear", "cosine"], default=SCHEDULER)
-    parser.add_argument("--img-size", type=int, default=IMG_SIZE)
-    parser.add_argument(
-        "--rgba",
-        action="store_true",
-        help="Model was trained on 4-channel RGBA instead of grayscale+alpha.",
-    )
     parser.add_argument(
         "--out",
         default=None,
@@ -58,25 +50,43 @@ def sample(argv=None):
         set_seed(args.seed)
 
     device = get_device(args.device)
-    grayscale = not args.rgba
-    # grayscale pipeline keeps luminance + alpha, RGBA keeps all four
-    channels = 2 if grayscale else 4
+    model_path = RGBA_MODEL if args.model == "rgba" else GRAYSCALE_MODEL
+    run_slug = model_path.stem
 
-    print(f"Device: {device} | checkpoint: {args.checkpoint}")
+    checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+    hp = checkpoint.get("hyperparameters", {})
 
-    checkpoint = torch.load(args.model, map_location=device, weights_only=False)
+    timesteps = hp.get("T") or hp.get("timesteps") or TIMESTEPS
+    img_size = hp.get("img_size", IMG_SIZE)
+    base = hp.get("base", 64)
+    use_skip = hp.get("use_skip", True)
 
-    model = DenoisingUNet(in_channels=channels, out_channels=channels, T=args.timesteps)
+    first_weight = next(iter(checkpoint["model_state_dict"].values()))
+    channels = first_weight.shape[1]
 
+    grayscale = channels == 2
+
+    print(
+        f"Device: {device} | checkpoint: {run_slug} | "
+        f"T={timesteps} | channels={channels} | img_size={img_size}"
+    )
+
+    model = DenoisingUNet(
+        in_channels=channels,
+        out_channels=channels,
+        base=base,
+        use_skip=use_skip,
+        T=timesteps,
+    )
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device).eval()
 
-    noising_model = NoisingModel(T=args.timesteps, device=device)
+    noising_model = NoisingModel(T=timesteps, device=device)
 
     sampler = Sampler(
         model=model,
         noising_model=noising_model,
-        img_size=args.img_size,
+        img_size=img_size,
         channels=channels,
         device=device,
     )
@@ -89,7 +99,7 @@ def sample(argv=None):
     out_path = args.out or FIGURES_PATH / f"samples_{args.n}.png"
     show_image(
         generated_images,
-        slug=args.checkpoint,
+        slug=run_slug,
         grayscale=grayscale,
         out_path=out_path,
         show=args.show,
