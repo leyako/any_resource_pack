@@ -38,15 +38,14 @@ The device (`cuda`, `mps`, or `cpu`) is auto-detected; override with `--device`.
 python3 -m src.training.train
 
 # Override anything for an experiment
-python3 -m src.training.train --epochs 50 --scheduler cosine --lr 1e-4 --batch-size 64
+python3 -m src.training.train --epochs 50 --lr 1e-4 --batch-size 64
 ```
 
-Checkpoints are written to `src/training/models/`:
-- `denoising-<loss>-<epochs>.pt` : one file per run
-- `denoising-latest.pt` : overwritten each run, used as the default for sampling
+Checkpoints are written to `src/training/models/` (overridable via `--save-dir`) using the naming convention `run_lr<lr>_T<T>_<optim>_<scheduler>_ep<epochs>.pt`:
+- The final epoch is always saved automatically, embedding the run hyperparameters and loss metadata inside the `.pt` file.
+- Intermediate checkpoints can also be saved via `--save-epochs` (e.g. `--save-epochs 100 150 200`).
 
-Useful flags: `--timesteps`, `--optim {adam,adamw}`, `--val-split`, `--rgba`
-(train on 4-channel colour instead of the default grayscale+alpha), `--seed`.
+Useful flags: `--timesteps`, `--optim {adam,adamw}`, `--scheduler {linear,cosine}`, `--val-split`, `--rgba` (train on 4-channel colour instead of the default grayscale+alpha), `--save-epochs`, `--save-dir`, `--device`, `--seed`.
 
 ## Generation
 ```bash

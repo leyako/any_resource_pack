@@ -25,7 +25,6 @@ def parse_args(argv=None):
     parser.add_argument("--timesteps", type=int, default=TIMESTEPS, help="T")
     parser.add_argument("--lr", type=float, default=LEARNING_RATE)
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE)
-    parser.add_argument("--scheduler", choices=["linear", "cosine"], default=SCHEDULER)
     parser.add_argument("--optim", choices=["adam", "adamw"], default=OPTIMIZER)
     parser.add_argument("--val-split", type=float, default=VAL_SPLIT)
     parser.add_argument(
@@ -70,7 +69,6 @@ def init_trainer(args):
         T=args.timesteps,
         device=device,
         lr=args.lr,
-        scheduler=args.scheduler,
     )
 
 
