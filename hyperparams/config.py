@@ -30,7 +30,7 @@ VAL_SPLIT = 0.2
 
 # Keep luminance + alpha (2 channels) instead of RGBA: colour varies across
 # packs, geometry does not.
-GRAYSCALE = True
+GRAYSCALE = False
 
 # T, shared by the forward and reverse processes. Sampling costs T network passes.
 TIMESTEPS = 1000

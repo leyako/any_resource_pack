@@ -1,6 +1,7 @@
 import torch
 
 from .config import TRAIN_PATH, TEST_PATH, BATCH_SIZE, GRAYSCALE, VAL_SPLIT
+from .image_io import RGBAToGrayscale
 from PIL import Image
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets
@@ -8,28 +9,6 @@ from torchvision.transforms import v2, Grayscale
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 is_cuda = device.type == "cuda"
-
-
-class RGBAToGrayscale:
-    """
-    Converts RGBA Tensor [4, 32, 32] to Grayscale RGBA [2, 32, 32].
-    Computes luminance across RGB.
-    Alpha channel remains completely untouched.
-    """
-
-    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
-        # tensor is [4, 32, 32] in range [0.0, 1.0]
-        rgb = tensor[:3, :, :]
-        alpha = tensor[3:, :, :]
-
-        # Calculate luminance (Y = 0.299 R + 0.587 G + 0.114 B)
-        weights = torch.tensor([0.299, 0.587, 0.114], device=tensor.device).view(
-            3, 1, 1
-        )
-        gray = (rgb * weights).sum(dim=0, keepdim=True)  # Shape: [1, 32, 32]
-
-        # Recombine with Alpha -> Shape: [2, 32, 32]
-        return torch.cat([gray, alpha], dim=0)
 
 
 class RGBAColorJitter:

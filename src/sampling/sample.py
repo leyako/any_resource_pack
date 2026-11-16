@@ -1,7 +1,7 @@
 """
 Generation entry point: samples textures from a trained checkpoint.
 
-    python -m src.sampling.sample --n 32 --out figures/samples.png
+    python3 -m src.sampling.sample --n 32 --out figures/samples.png
 
 Runs the whole reverse chain from pure noise, so it costs T network passes
 whatever the batch size. The schedule and T must match those used for training:

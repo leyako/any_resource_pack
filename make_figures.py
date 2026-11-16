@@ -1,8 +1,8 @@
 """
 Regenerates every figure of the report into figures/.
 
-    python make_figures.py              # all figures that can be built
-    python make_figures.py --only schedules noising
+    python3 make_figures.py              # all figures that can be built
+    python3 make_figures.py --only schedules noising
 
 No figure is edited by hand: each is rebuilt from the code and the config, so a
 hyperparameter change propagates to the report in one command. Figures are
@@ -88,12 +88,10 @@ def fig_time_embedding():
 
 
 def fig_noising():
-    """The forward process on one training image. Needs the dataset."""
+    """The forward process on 3 random dataset sprites. Needs the dataset."""
     from src.noising.noise import main as noise_main
 
-    noise_main(
-        ["--t", "0", "100", "250", "500", "750", "1000", "--seed", str(SEED)]
-    )
+    noise_main()
 
 
 def fig_grayscale():

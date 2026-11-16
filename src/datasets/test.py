@@ -1,7 +1,7 @@
 """
 Sanity check + report figure for the grayscale preprocessing pipeline.
 
-    python -m src.datasets.test
+    python3 -m src.datasets.test
 """
 
 import matplotlib.pyplot as plt

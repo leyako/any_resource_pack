@@ -8,7 +8,7 @@ Thomas Trahant, Felix Muhlke, Yako Lemeilleur
 ## Setup
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # The dataset lives in a git submodule hosted on Hugging Face
@@ -35,10 +35,10 @@ The device (`cuda`, `mps`, or `cpu`) is auto-detected; override with `--device`.
 
 ```bash
 # Train with the settings from hyperparams/config.py
-python -m src.training.train
+python3 -m src.training.train
 
 # Override anything for an experiment
-python -m src.training.train --epochs 50 --scheduler cosine --lr 1e-4 --batch-size 64
+python3 -m src.training.train --epochs 50 --scheduler cosine --lr 1e-4 --batch-size 64
 ```
 
 Checkpoints are written to `src/training/models/`:
@@ -52,10 +52,10 @@ Useful flags: `--timesteps`, `--optim {adam,adamw}`, `--val-split`, `--rgba`
 
 ```bash
 # Sample 32 images from the latest checkpoint
-python -m src.sampling.sample
+python3 -m src.sampling.sample
 
 # From a specific checkpoint, into a specific file
-python -m src.sampling.sample --checkpoint src/training/models/denoising-0.05-20.pt \
+python3 -m src.sampling.sample --checkpoint src/training/models/denoising-0.05-20.pt \
     --n 64 --out figures/final_samples.png --seed 0
 ```
 
@@ -66,26 +66,40 @@ Sampling runs the full reverse chain, so it costs `T` forward passes of the UNet
 
 ## Noising (forward process)
 
-Visualizes `q(x_t | x_0)` at chosen timesteps — the figure used in the report's
+Applies `q(x_t | x_0)` to 3 sprites drawn at random from the dataset, at 7
+timesteps evenly spaced over `[0, T]`. This is the figure used in the report's
 noising section.
 
 ```bash
-# Default: a strip at t = 0, 100, 250, 500, 750, 1000 on a training image
-python -m src.noising.noise
-
-# A single timestep, on your own sprite
-python -m src.noising.noise --image path/to/sprite.png --t 500
-
-# Compare schedules
-python -m src.noising.noise --scheduler cosine --out figures/noising_cosine.png
+python3 -m src.noising.noise
 ```
+
+Output goes to `figures/noising_process.png`: one row per sprite, one column per
+timestep. With `T = 1000` the timesteps are 0, 167, 333, 500, 667, 833 and 1000,
+and the paths actually drawn are printed. Every run draws different sprites.
+
+The command takes no arguments. To change what it produces, edit `N_IMAGES` and
+`N_STEPS` in `src/noising/noise.py`, or `TIMESTEPS`, `SCHEDULER` and `GRAYSCALE`
+in `hyperparams/config.py`.
+
+It needs only torch and pillow, so it works without torchvision.
+
+### Checking the forward process
+
+```bash
+python3 -m src.noising.check
+```
+
+Noises a synthetic sprite and asserts that the measured standard deviation matches
+what the schedule predicts, that a fixed seed reproduces the same result, and that
+`alpha_bar` reaches its expected extremes. Needs neither the dataset nor torchvision.
 
 ## Report figures
 
 Every figure in the report is regenerable from one command:
 
 ```bash
-python make_figures.py
+python3 make_figures.py
 ```
 
 | Name | File | Needs |
@@ -98,7 +112,7 @@ python make_figures.py
 
 Figures are independent: any that cannot be built (dataset or checkpoint missing)
 is reported and skipped, the rest still run. Build a subset with
-`python make_figures.py --only schedules noising`.
+`python3 make_figures.py --only schedules noising`.
 
 The UNet architecture diagram is drawn in Typst inside the report itself, not here.
 
@@ -108,7 +122,7 @@ Only needed to rebuild the dataset from scratch — normally the submodule is en
 Requires `HF_AUTH_TOKEN` in a `.env` file at the repository root.
 
 ```bash
-python -m dataset.main
+python3 -m dataset.main
 ```
 
 It scrapes pack manifests from `api.texturepack.be`, downloads the 42 item

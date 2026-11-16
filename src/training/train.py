@@ -1,7 +1,7 @@
 """
 Training entry point.
 
-    python -m src.training.train --epochs 20 --scheduler linear
+    python3 -m src.training.train --epochs 20 --scheduler linear
 
 Flags default to hyperparams/config.py, so no argument reproduces the reference
 run. The objective is the simplified DDPM loss: MSE between the predicted and
@@ -13,7 +13,6 @@ import argparse
 from hyperparams.config import (
     BATCH_SIZE,
     EPOCHS,
-    GRAYSCALE,
     LEARNING_RATE,
     OPTIMIZER,
     SCHEDULER,
